@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UC Do’koni — PUBG Mobile</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Maxsus gold/black ranglar
+  tailwind.config = { theme: { extend: { colors: { ink:"#0b0b0b", panel:"#141414", gold:"#d4af37", champ:"#f3e5ab" } } } };
+</script>
+<style>
+  body{background:#0b0b0b;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background-image:radial-gradient(800px 380px at 85% -5%,rgba(212,175,55,.16),transparent),radial-gradient(600px 300px at 0 0,rgba(243,229,171,.06),transparent)}
+  /* Glassmorphism */
+  .glass{background:rgba(20,20,20,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(212,175,55,.28);border-radius:16px}
+  .gold-text{background:linear-gradient(90deg,#d4af37,#f3e5ab,#d4af37);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .btn{border-radius:12px;font-weight:800;padding:.75rem 1.1rem;transition:.18s;cursor:pointer}
+  .btn-gold{background:linear-gradient(135deg,#f3e5ab,#d4af37 55%,#a8841f);color:#120d00;box-shadow:0 0 0 rgba(212,175,55,0)}
+  .btn-gold:hover{box-shadow:0 0 22px rgba(212,175,55,.6);transform:translateY(-1px)}
+  .btn-line{border:1px solid rgba(212,175,55,.5);color:#f3e5ab}.btn-line:hover{background:rgba(212,175,55,.1)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}
+  .tab{padding:.6rem 1rem;border-radius:12px;font-weight:700;color:#9a9a9a;white-space:nowrap;border:1px solid transparent}
+  .tab.active{color:#f3e5ab;border-color:rgba(212,175,55,.5);background:rgba(212,175,55,.1)}
+  .opt{cursor:pointer;text-align:left;border:1px solid rgba(212,175,55,.25);border-radius:14px;background:rgba(20,20,20,.7);transition:.18s}
+  .opt:hover{border-color:rgba(212,175,55,.6)}
+  .opt.active{border-color:#d4af37;box-shadow:0 0 0 1px #d4af37,0 0 24px rgba(212,175,55,.28);background:rgba(212,175,55,.08)}
+  input,select{background:#0b0b0b;border:1px solid rgba(212,175,55,.3);border-radius:10px;padding:.7rem .9rem;color:#fff;width:100%}
+  input:focus-visible,select:focus-visible,.btn:focus-visible,.tab:focus-visible,.opt:focus-visible{outline:2px solid #d4af37;outline-offset:2px}
+  #wheelBox{position:relative;width:min(340px,86vw);aspect-ratio:1}
+  #wheel{width:100%;height:100%;border-radius:50%;box-shadow:0 0 0 6px #2a2108,0 0 36px rgba(212,175,55,.45);transition:transform 4.6s cubic-bezier(.12,.7,.1,1)}
+  #pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);border-left:15px solid transparent;border-right:15px solid transparent;border-top:30px solid #f3e5ab;filter:drop-shadow(0 2px 4px #000);z-index:2}
+  #modal{background:rgba(0,0,0,.8)}
+  .pop{animation:pop .2s ease-out}@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+  .bar{height:8px;border-radius:99px;background:#0b0b0b;overflow:hidden}.bar>i{display:block;height:100%;background:linear-gradient(90deg,#d4af37,#f3e5ab)}
+  .tbox{background:#0b0b0b;border:1px solid rgba(212,175,55,.25);border-radius:10px;padding:.4rem 0;text-align:center}
+  @media (prefers-reduced-motion:reduce){#wheel{transition-duration:.01s}.pop{animation:none}}
+</style>
+</head>
+<body class="min-h-screen pb-10">
+
+<header class="sticky top-0 z-20 border-b border-gold/20 bg-ink/85 backdrop-blur">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="text-xl font-black">👑 <span class="gold-text">UC</span> Do’kon</div>
+    <nav class="flex gap-2 overflow-x-auto">
+      <button class="tab active" data-tab="shop">💎 UC Do’koni</button>
+      <button class="tab" data-tab="spin">🎡 UC Yutish</button>
+      <button class="tab" data-tab="gift">🏆 Konkurslar</button>
+      <button class="tab hidden" data-tab="admin" id="adminTab">🛡️ Admin</button>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-6">
+
+<!-- ===== UC DO‘KONI ===== -->
+<section id="shop">
+  <h1 class="text-2xl sm:text-3xl font-black mb-1 gold-text">PUBG Mobile UC sotib oling</h1>
+  <p class="text-neutral-400 mb-6">ID kiriting, paketni tanlang va to‘lang.</p>
+  <div class="glass p-5 mb-5">
+    <h2 class="font-bold mb-3">1. O‘yinchi ID</h2>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input id="pid" inputmode="numeric" maxlength="12" placeholder="PUBG ID (kamida 7 ta raqam)">
+      <button id="checkBtn" class="btn btn-gold sm:w-48">Tekshirish</button>
+    </div>
+    <p id="pidMsg" class="mt-3 text-sm min-h-[1.25rem]" aria-live="polite"></p>
+  </div>
+  <div class="glass p-5 mb-5"><h2 class="font-bold mb-3">2. UC paketi</h2><div id="packs" class="grid grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+  <div class="glass p-5 mb-5"><h2 class="font-bold mb-3">3. To‘lov usuli</h2><div id="pays" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div></div>
+  <div class="glass p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div><div class="text-sm text-neutral-400">Umumiy summa</div><div id="total" class="text-2xl font-black gold-text">0 so’m</div></div>
+    <button id="buyBtn" class="btn btn-gold sm:w-56 text-lg">Sotib olish</button>
+  </div>
+</section>
+
+<!-- ===== OMAD G‘ILDIRAGI ===== -->
+<section id="spin" class="hidden">
+  <h1 class="text-2xl sm:text-3xl font-black mb-1 gold-text">Omad g‘ildiragi</h1>
+  <p class="text-neutral-400 mb-6">Yutilgan UC balansingizga qo‘shiladi. Balansdan yangi urinish sotib olishingiz mumkin.</p>
+  <div class="glass p-6 flex flex-col items-center gap-5 max-w-md mx-auto">
+    <div id="wheelBox"><div id="pointer"></div><canvas id="wheel" width="500" height="500"></canvas></div>
+    <div class="grid grid-cols-2 gap-4 w-full text-center">
+      <div class="tbox py-2"><div class="text-xs text-neutral-400">Urinishlar</div><b id="tries" class="text-2xl text-champ">0</b></div>
+      <div class="tbox py-2"><div class="text-xs text-neutral-400">Balans</div><b id="bal" class="text-2xl text-champ">0 UC</b></div>
+    </div>
+    <button id="spinBtn" class="btn btn-gold w-full text-lg">Aylantirish</button>
+    <button id="buyTry" class="btn btn-line w-full text-sm">Balansdan urinish sotib olish</button>
+  </div>
+</section>
+
+<!-- ===== KONKURSLAR ===== -->
+<section id="gift" class="hidden">
+  <h1 class="text-2xl sm:text-3xl font-black mb-1 gold-text">Faol konkurslar</h1>
+  <p class="text-neutral-400 mb-6">Qatnashing va sovrinlarni yuting.</p>
+  <div id="gifts" class="grid lg:grid-cols-3 gap-5 mb-8"></div>
+  <div class="glass p-5"><h2 class="font-bold text-lg mb-3">Oxirgi g‘oliblar</h2><div id="winners" class="text-sm space-y-2"></div></div>
+</section>
+
+<!-- ===== ADMIN ===== -->
+<section id="admin" class="hidden">
+  <h1 class="text-2xl sm:text-3xl font-black mb-5 gold-text">Admin panel</h1>
+  <div id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
+  <div class="glass p-5 mb-6"><h2 class="font-bold text-lg mb-3">Buyurtmalar</h2>
+    <div class="overflow-x-auto"><table class="w-full text-sm min-w-[640px]">
+      <thead class="text-neutral-400 text-left"><tr><th class="py-2">Foydalanuvchi</th><th>PUBG ID</th><th>Paket</th><th>Summa</th><th>To‘lov</th><th>Status</th></tr></thead>
+      <tbody id="orders"></tbody></table></div></div>
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="glass p-5"><h2 class="font-bold text-lg mb-3">Yangi konkurs</h2>
+      <div class="space-y-3">
+        <input id="cTitle" placeholder="Nomi (masalan: M416 Glacier)"><input id="cPrize" placeholder="Sovrin">
+        <div class="grid grid-cols-2 gap-3"><input id="cHours" type="number" min="1" placeholder="Davomiyligi (soat)"><input id="cMax" type="number" min="1" placeholder="Maks. ishtirokchi"></div>
+        <button id="cAdd" class="btn btn-gold w-full">Konkurs qo‘shish</button></div></div>
+    <div class="glass p-5"><h2 class="font-bold text-lg mb-3">Konkurslarni boshqarish</h2><div id="adminContests" class="space-y-3 text-sm"></div></div>
+  </div>
+</section>
+</main>
+
+<div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+  <div id="modalBody" class="glass pop w-full max-w-md p-6 max-h-[90vh] overflow-y-auto"></div>
+</div>
+<div id="toast" class="hidden fixed left-1/2 -translate-x-1/2 bottom-5 z-[60] glass px-4 py-3 text-sm font-semibold"></div>
+
+<script>
+/* ================= UMUMIY ================= */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so’m";
+// XSS himoyasi: foydalanuvchi kiritgan matnlarni escape qilamiz
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const tg = window.Telegram && Telegram.WebApp; if (tg) { tg.ready(); tg.expand(); }
+
+// API yordamchisi: Telegram initData bilan (lokal testda x-telegram-id bilan)
+async function api(url, method = "GET", body) {
+  const h = { "Content-Type": "application/json" };
+  if (tg && tg.initData) h["x-init-data"] = tg.initData;
+  else { let id = localStorage.getItem("devId"); if (!id) { id = String(Math.floor(1e8 + Math.random()*9e8)); localStorage.setItem("devId", id); } h["x-telegram-id"] = id; }
+  const r = await fetch(url, { method, headers: h, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Xatolik yuz berdi");
+  return d;
+}
+let tt; const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.remove("hidden"); clearTimeout(tt); tt = setTimeout(() => t.classList.add("hidden"), 2800); };
+const openModal = h => { $("#modalBody").innerHTML = h; $("#modal").classList.remove("hidden"); };
+const closeModal = () => $("#modal").classList.add("hidden");
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+const actions = {};
+$("#modalBody").addEventListener("click", e => { const a = e.target.closest("[data-act]"); if (!a) return; a.dataset.act === "close" ? closeModal() : actions[a.dataset.act]?.(); });
+// Xatolarni toast ko‘rinishida chiqaruvchi o‘ram
+const safe = fn => async (...a) => { try { await fn(...a); } catch (e) { toast("⚠️ " + e.message); } };
+
+$$(".tab").forEach(b => b.addEventListener("click", () => {
+  $$(".tab").forEach(x => x.classList.toggle("active", x === b));
+  ["shop","spin","gift","admin"].forEach(id => $("#"+id).classList.toggle("hidden", id !== b.dataset.tab));
+  if (b.dataset.tab === "gift") loadContests(); if (b.dataset.tab === "admin") loadAdmin();
+}));
+
+let CFG, ME, shop = { id: null, nick: null, pack: null, pay: null };
+
+/* ================= DO‘KON ================= */
+function renderShop() {
+  $("#packs").innerHTML = CFG.packages.map((p, i) => `
+    <button class="opt p-4 relative" data-i="${i}">
+      ${p.bonus ? `<span class="absolute top-2 right-2 text-xs font-bold bg-gold text-black rounded-full px-2 py-0.5">+${p.bonus}</span>` : ""}
+      <div class="text-3xl mb-1">💎</div><div class="text-xl font-black text-champ">${p.uc} UC</div>
+      <div class="text-xs text-neutral-400 min-h-[1rem]">${p.bonus ? "Jami " + (p.uc + p.bonus) + " UC" : "Bonussiz"}</div>
+      <div class="mt-2 font-bold text-gold">${fmt(p.price)}</div></button>`).join("");
+  $("#pays").innerHTML = CFG.payments.map(p => `<button class="opt p-3 text-center font-semibold" data-p="${p}">${p}</button>`).join("");
+  $$("#packs .opt").forEach(b => b.onclick = () => { shop.pack = CFG.packages[+b.dataset.i]; $$("#packs .opt").forEach(x => x.classList.toggle("active", x === b)); $("#total").textContent = fmt(shop.pack.price); });
+  $$("#pays .opt").forEach(b => b.onclick = () => { shop.pay = b.dataset.p; $$("#pays .opt").forEach(x => x.classList.toggle("active", x === b)); });
+}
+$("#pid").addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, ""); shop.id = null; $("#pidMsg").textContent = ""; });
+$("#checkBtn").onclick = safe(async () => {
+  const v = $("#pid").value, m = $("#pidMsg");
+  if (v.length < 7) { m.className = "mt-3 text-sm text-red-400"; m.textContent = "ID kamida 7 ta raqam bo‘lsin."; return; }
+  $("#checkBtn").disabled = true; $("#checkBtn").textContent = "Tekshirilmoqda...";
+  try {
+    await new Promise(r => setTimeout(r, 600));   // real vaqt effekti
+    const d = await api("/api/check-id", "POST", { pubgId: v });
+    shop.id = v; shop.nick = d.nickname;
+    m.className = "mt-3 text-sm text-emerald-400"; m.innerHTML = `✅ <b class="text-champ">${esc(d.nickname)}</b> — Server: <b>${esc(d.server)}</b>`;
+  } finally { $("#checkBtn").disabled = false; $("#checkBtn").textContent = "Tekshirish"; }
+});
+$("#buyBtn").onclick = () => {
+  if (!shop.id) return toast("Avval ID ni tekshiring");
+  if (!shop.pack) return toast("UC paketini tanlang");
+  if (!shop.pay) return toast("To‘lov usulini tanlang");
+  const p = shop.pack;
+  openModal(`<h3 class="text-xl font-black mb-4 gold-text">Buyurtmani tasdiqlang</h3>
+    <dl class="space-y-2 text-sm">
+      <div class="flex justify-between"><dt class="text-neutral-400">O‘yinchi</dt><dd class="font-semibold">${esc(shop.nick)} (${esc(shop.id)})</dd></div>
+      <div class="flex justify-between"><dt class="text-neutral-400">Paket</dt><dd class="font-semibold text-champ">${p.uc}${p.bonus ? " + " + p.bonus : ""} UC</dd></div>
+      <div class="flex justify-between"><dt class="text-neutral-400">To‘lov</dt><dd class="font-semibold">${esc(shop.pay)}</dd></div>
+      <div class="flex justify-between border-t border-gold/20 pt-3 text-base"><dt>Jami</dt><dd class="font-black text-gold">${fmt(p.price)}</dd></div></dl>
+    <div class="grid grid-cols-2 gap-3 mt-6"><button class="btn btn-line" data-act="close">Bekor qilish</button><button class="btn btn-gold" data-act="order">Tasdiqlash</button></div>`);
+};
+actions.order = safe(async () => {
+  const d = await api("/api/order", "POST", { pubgId: shop.id, ucPackage: shop.pack.uc, paymentMethod: shop.pay });
+  openModal(`<div class="text-center"><div class="text-5xl mb-3">🎉</div><h3 class="text-xl font-black gold-text mb-2">Buyurtma qabul qilindi!</h3>
+    <p class="text-neutral-400 text-sm mb-1">Raqam: <b class="text-champ">${esc(String(d.orderId).slice(-6).toUpperCase())}</b></p>
+    <p class="text-neutral-400 text-sm mb-5">Telegram botdan xabar olasiz.</p><button class="btn btn-gold w-full" data-act="close">Yopish</button></div>`);
+});
+
+/* ================= OMAD G‘ILDIRAGI ================= */
+let rot = 0, spinning = false, ARC = 45;
+function drawWheel() {
+  const L = CFG.sectors, cv = $("#wheel"), g = cv.getContext("2d"), R = cv.width / 2; ARC = 360 / L.length;
+  L.forEach((label, i) => {
+    const a0 = (-90 + i*ARC) * Math.PI/180, a1 = (-90 + (i+1)*ARC) * Math.PI/180;
+    g.beginPath(); g.moveTo(R,R); g.arc(R,R,R-6,a0,a1); g.closePath();
+    g.fillStyle = i % 2 ? "#1c1608" : "#0f0f0f"; g.fill(); g.strokeStyle = "#d4af37"; g.lineWidth = 2; g.stroke();
+    g.save(); g.translate(R,R); g.rotate((a0+a1)/2); g.textAlign = "right"; g.textBaseline = "middle";
+    g.fillStyle = parseInt(label) >= 300 ? "#f3e5ab" : "#fff"; g.font = "bold 25px system-ui,Arial"; g.fillText(label, R-26, 0); g.restore();
+  });
+  g.beginPath(); g.arc(R,R,38,0,7); g.fillStyle = "#0b0b0b"; g.fill(); g.lineWidth = 4; g.strokeStyle = "#d4af37"; g.stroke();
+  g.font = "28px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("👑", R, R+2);
+}
+function showUser() { $("#tries").textContent = ME.ucSpinsLeft; $("#bal").textContent = ME.balance + " UC"; }
+
+$("#spinBtn").onclick = safe(async () => {
+  if (spinning) return;
+  spinning = true; $("#spinBtn").disabled = true;
+  let d;
+  try { d = await api("/api/spin", "POST"); } catch (e) { spinning = false; $("#spinBtn").disabled = false; throw e; }
+  // Server tanlagan sektor markazi strelka ostida to‘xtaydi
+  const jitter = (Math.random() - .5) * ARC * .7;
+  const target = ((360 - (d.index*ARC + ARC/2 + jitter)) % 360 + 360) % 360;
+  rot += ((target - rot % 360) + 360) % 360 + 360*6;
+  const w = $("#wheel"); w.style.transform = `rotate(${rot}deg)`;
+  let done = false;
+  const fin = () => {
+    if (done) return; done = true; w.removeEventListener("transitionend", fin);
+    spinning = false; $("#spinBtn").disabled = false; ME = d.user; showUser();
+    const s = d.prize, win = !!s.uc;
+    openModal(`<div class="text-center"><div class="text-6xl mb-3">${win ? "🎉" : s.retry ? "🔁" : "😔"}</div>
+      <h3 class="text-2xl font-black gold-text mb-2">${win ? "Tabriklaymiz! " + s.label : s.retry ? "Yana bir urinish!" : "Omad kelmadi"}</h3>
+      <p class="text-neutral-400 text-sm mb-5">${win ? "UC balansingizga qo‘shildi." : s.retry ? "Qo‘shimcha urinish berildi." : "Yana urinib ko‘ring!"}</p>
+      <button class="btn btn-gold w-full" data-act="close">Davom etish</button></div>`);
+  };
+  w.addEventListener("transitionend", fin); setTimeout(fin, 5200);
+});
+$("#buyTry").onclick = safe(async () => {
+  const d = await api("/api/spin/buy", "POST"); ME = d.user; showUser(); toast(`+1 urinish (−${CFG.spinCost} UC) ✅`);
+});
+
+/* ================= KONKURSLAR ================= */
+const D = 864e5, H = 36e5;
+async function loadContests() {
+  const { active, ended } = await api("/api/contests");
+  $("#gifts").innerHTML = active.length ? active.map(c => `
+    <article class="glass p-5 flex flex-col">
+      <div class="text-5xl mb-3">${esc(c.icon)}</div><h2 class="text-lg font-black">${esc(c.title)}</h2>
+      <p class="text-sm text-neutral-400 mt-1 mb-4">${esc(c.description)}</p>
+      <div class="grid grid-cols-4 gap-2 mb-4" data-end="${new Date(c.endTime).getTime()}">
+        ${["Kun","Soat","Daqiqa","Soniya"].map(l => `<div class="tbox"><div class="text-xl font-black text-champ" data-u>00</div><div class="text-[11px] text-neutral-400">${l}</div></div>`).join("")}</div>
+      <div class="flex justify-between text-sm mb-1"><span class="text-neutral-400">Ishtirokchilar</span><b>${c.count.toLocaleString("en-US")} / ${c.max.toLocaleString("en-US")}</b></div>
+      <div class="bar mb-4"><i style="width:${Math.min(100, c.count / c.max * 100)}%"></i></div>
+      <button class="btn mt-auto ${c.joined ? "btn-line" : "btn-gold"}" data-join="${c.id}" ${c.joined ? "disabled" : ""}>${c.joined ? "Siz ishtirokchisiz ✅" : "Qatnashish"}</button></article>`).join("")
+    : `<p class="text-neutral-400">Hozircha faol konkurs yo‘q.</p>`;
+  $("#winners").innerHTML = ended.length ? ended.map(c => `<div class="flex justify-between border-t border-gold/15 pt-2"><span class="font-mono">${esc(c.winner || "—")}</span><span>${esc(c.title)}</span><b class="text-gold">${esc(c.prize)}</b></div>`).join("") : `<p class="text-neutral-400">G‘oliblar hali aniqlanmagan.</p>`;
+  tick();
+}
+const tick = () => $$("[data-end]").forEach(b => {
+  const ms = Math.max(0, b.dataset.end - Date.now()), v = [ms/D, ms%D/H, ms%H/6e4, ms%6e4/1e3].map(x => String(Math.floor(x)).padStart(2, "0"));
+  b.querySelectorAll("[data-u]").forEach((e, i) => e.textContent = v[i]);
+});
+setInterval(tick, 1000);
+
+let joinId = null;
+$("#gifts").addEventListener("click", e => {
+  const b = e.target.closest("[data-join]"); if (!b) return; joinId = b.dataset.join;
+  openModal(`<h3 class="text-xl font-black gold-text mb-4">Konkursda qatnashish</h3>
+    <label class="text-sm block mb-1">PUBG ID</label><input id="jId" inputmode="numeric" maxlength="12" value="${esc(ME.pubgId)}" placeholder="Kamida 7 ta raqam">
+    <label class="text-sm block mt-3 mb-1">Telegram username</label><input id="jTg" placeholder="@username" autocomplete="off">
+    <div class="grid grid-cols-2 gap-3 mt-5"><button class="btn btn-line" data-act="close">Bekor qilish</button><button class="btn btn-gold" data-act="join">Qatnashish</button></div>`);
+});
+actions.join = safe(async () => {
+  const pubgId = $("#jId").value.trim(), telegram = $("#jTg").value.trim();
+  if (!/^\d{7,12}$/.test(pubgId)) return toast("PUBG ID kamida 7 ta raqam bo‘lsin");
+  if (!/^@[A-Za-z0-9_]{4,32}$/.test(telegram)) return toast("Username @ bilan boshlansin (kamida 4 belgi)");
+  await api(`/api/contests/${joinId}/join`, "POST", { pubgId, telegram });
+  closeModal(); toast("Siz ishtirokchisiz ✅"); loadContests();
+});
+
+/* ================= ADMIN ================= */
+const STATUS = { pending: "Kutishda", done: "Bajarildi", cancelled: "Bekor qilindi" };
+async function loadAdmin() {
+  const [s, o, c] = await Promise.all([api("/api/admin/stats"), api("/api/admin/orders"), api("/api/contests")]);
+  const card = (l, v) => `<div class="glass p-4"><div class="text-xs text-neutral-400">${l}</div><div class="text-xl font-black gold-text mt-1">${v}</div></div>`;
+  $("#stats").innerHTML = card("Jami foydalanuvchilar", s.users) + card("Sotilgan UC", s.soldUC.toLocaleString("en-US") + " UC") + card("Tushgan summa", fmt(s.revenue)) + card("Faol konkurslar", s.activeContests);
+  $("#orders").innerHTML = o.orders.map(x => `<tr class="border-t border-gold/15">
+    <td class="py-2">@${esc(x.user?.username || x.user?.telegramId)}</td><td class="font-mono">${esc(x.pubgId)}</td>
+    <td>${x.ucPackage.uc + x.ucPackage.bonus} UC</td><td>${fmt(x.amount)}</td><td>${esc(x.paymentMethod)}</td>
+    <td><select data-order="${x._id}">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === x.status ? "selected" : ""}>${v}</option>`).join("")}</select></td></tr>`).join("")
+    || `<tr><td colspan="6" class="py-4 text-neutral-400">Buyurtmalar yo‘q.</td></tr>`;
+  $("#adminContests").innerHTML = [...c.active, ...c.ended].map(x => `<div class="flex items-center justify-between gap-3 border-t border-gold/15 pt-3">
+    <div><b>${esc(x.title)}</b><div class="text-neutral-400">${x.count} ishtirokchi · ${x.status === "active" ? "faol" : "g‘olib: " + esc(x.winner)}</div></div>
+    ${x.status === "active" ? `<button class="btn btn-gold !py-2 text-xs" data-draw="${x.id}">🎲 G‘olibni tanlash</button>` : ""}</div>`).join("");
+}
+$("#orders").addEventListener("change", safe(async e => {
+  const s = e.target.closest("[data-order]"); if (!s) return;
+  await api("/api/admin/orders/" + s.dataset.order, "PATCH", { status: s.value }); toast("Status yangilandi"); loadAdmin();
+}));
+$("#adminContests").addEventListener("click", safe(async e => {
+  const b = e.target.closest("[data-draw]"); if (!b) return;
+  const d = await api(`/api/admin/contests/${b.dataset.draw}/draw`, "POST");
+  openModal(`<div class="text-center"><div class="text-5xl mb-3">🎊</div><h3 class="text-xl font-black gold-text mb-2">G‘olib aniqlandi</h3>
+    <p class="font-mono mb-1">${esc(d.winner.pubgId)}</p><p class="text-champ mb-5">${esc(d.winner.telegram)}</p><button class="btn btn-gold w-full" data-act="close">Yopish</button></div>`);
+  loadAdmin();
+}));
+$("#cAdd").onclick = safe(async () => {
+  await api("/api/admin/contests", "POST", { title: $("#cTitle").value.trim(), prize: $("#cPrize").value.trim(), hours: +$("#cHours").value, maxParticipants: +$("#cMax").value });
+  ["cTitle","cPrize","cHours","cMax"].forEach(i => $("#"+i).value = ""); toast("Konkurs qo‘shildi ✅"); loadAdmin();
+});
+
+/* ================= BOSHLANISH ================= */
+(async () => {
+  try {
+    [CFG, { user: ME }] = await Promise.all([api("/api/config"), api("/api/me")]);
+    renderShop(); drawWheel(); showUser(); loadContests();
+    api("/api/admin/stats").then(() => $("#adminTab").classList.remove("hidden")).catch(() => {});  // faqat adminlarga
+  } catch (e) { toast("⚠️ " + e.message); }
+})();
+</script>
+</body>
+</html>
